@@ -10,6 +10,8 @@
 
 ユーザーが各機能を個別にオン/オフできるカスタマイズ可能な拡張機能として設計されています。
 
+また[niconico-clip-dl](https://github.com/abeshinzo78/niconico-clip-dl)との併用も可能です。
+
 ## インストール方法
 
 [Releases](https://github.com/abeshinzo78/better-niconico-firefox/releases/tag/v1.0.13)より最新版のxpiをダウンロードするだけです。
