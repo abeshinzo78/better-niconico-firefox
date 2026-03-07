@@ -1,0 +1,54 @@
+{
+  "name": "better-niconico",
+  "version": "1.0.13",
+  "description": "ニコニコ動画のレイアウトと細部を改善する拡張機能",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon --config nodemon.json",
+    "build": "npm run generate-icons && vite build && node scripts/post-build.mjs",
+    "preview": "vite build --watch --mode development",
+    "generate-icons": "node generate-icons.js",
+    "clean": "node -e \"const fs = require('fs'); if (fs.existsSync('dist')) { fs.rmSync('dist', {recursive: true, force: true}); }\"",
+    "lint": "oxlint --silent",
+    "lint:strict": "oxlint --deny-warnings",
+    "lint:fix": "oxlint --fix",
+    "check:file": "oxlint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest --run",
+    "test:watch": "vitest --watch",
+    "test:cov": "vitest run --coverage"
+  },
+  "keywords": [
+    "chrome-extension",
+    "nicovideo",
+    "niconico",
+    "typescript",
+    "vite"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.2.1",
+    "@resvg/resvg-js": "^2.6.2",
+    "@types/chrome": "^0.0.268",
+    "@vitest/coverage-v8": "^4.0.17",
+    "happy-dom": "^20.3.4",
+    "nodemon": "^3.1.10",
+    "oxlint": "^1.24.0",
+    "prettier": "3.6.2",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^4.0.17"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
+    "@xpadev-net/niconicomments": "^0.2.76",
+    "anime4k-webgpu": "^1.0.0",
+    "neverthrow": "^8.2.0",
+    "zod": "^4.1.12"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Better Niconico",
+  "description": "ニコニコ動画のレイアウトと細部を改善する拡張機能",
+  "permissions": ["storage"],
+  "host_permissions": ["*://*.nicovideo.jp/*"],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "better-niconico@example.com",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": ["none"],
+        "opt_out": "https://example.com/opt-out",
+        "opt_in": "https://example.com/opt-in"
+      }
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/*", "icons/*", "ffmpeg/*", "pip-helper.js"],
+      "matches": ["https://*.nicovideo.jp/*"]
+    }
+  ],
+  "background": {
+    "scripts": ["src/background/index.ts"],
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.nicovideo.jp/*"],
+      "js": ["src/content/index.ts"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "Better Niconico 設定"
+  },
+  "icons": {
+    "16": "public/icons/icon16.png",
+    "32": "public/icons/icon32.png",
+    "48": "public/icons/icon48.png",
+    "128": "public/icons/icon128.png"
+  }
+}

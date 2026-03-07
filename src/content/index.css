@@ -1,0 +1,465 @@
+/* Better Niconico - Content Script Styles */
+
+/* プレミアム会員セクションを非表示にする際のスムーズなトランジション */
+.TagPushVideosContainer {
+  transition:
+    opacity 0.3s ease-out,
+    height 0.3s ease-out;
+}
+
+/* プロフィールアイコンを四角型にする */
+body.bn-square-icons {
+  --bn-icon-border-radius: 4px;
+}
+
+/* ヘッダーのプロフィールアイコン（niconico-classicと同じセレクタ） */
+body.bn-square-icons .nico-CommonHeaderRoot .common-header-1hpqfmt,
+body.bn-square-icons .nico-CommonHeaderRoot .common-header-ws8uen,
+body.bn-square-icons .nico-CommonHeaderRoot .common-header-1h5huqo,
+body.bn-square-icons .nico-CommonHeaderRoot .common-header-n6q0ln,
+body.bn-square-icons .nico-CommonHeaderRoot .common-header-1cb8wce {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* コンテンツ内のプロフィールアイコン（ユーザーアイコン・チャンネルアイコン） */
+/* src属性でプロフィールアイコンを特定（niconico-classicと同じ方法） */
+body.bn-square-icons .bdr_full[src^="https\://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/"],
+body.bn-square-icons .bdr_full[src^="https\://secure-dcdn.cdn.nimg.jp/comch/channel-icon/"],
+body.bn-square-icons .bdr_full[src*="/nicoaccount/usericon/"],
+body.bn-square-icons .bdr_full[src*="/comch/channel-icon/"] {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* 動画ページのプロフィールアイコン（--radii-m を使用） */
+body.bn-square-icons .bdr_full[src^="https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/"],
+body.bn-square-icons .bdr_full[src^="https://secure-dcdn.cdn.nimg.jp/comch/channel-icon/"]
+{
+  border-radius: var(--radii-m);
+}
+
+body.bn-square-icons .bdr_full[src^="https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/"].ml_-x1_5,
+body.bn-square-icons .bdr_full[src^="https://secure-dcdn.cdn.nimg.jp/comch/channel-icon/"].ml_-x1_5
+{
+  margin-left: 0;
+}
+
+/* data-src属性（遅延読み込み）やsrcset属性を持つプロフィールアイコンにも対応 */
+body.bn-square-icons img.bdr_full[data-src*='nicoaccount/usericon/'],
+body.bn-square-icons img.bdr_full[data-src*='comch/channel-icon/'],
+body.bn-square-icons img.bdr_full[srcset*='nicoaccount/usericon/'],
+body.bn-square-icons img.bdr_full[srcset*='comch/channel-icon/'] {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* より汎用的な画像セレクタ（クラス名に依存しない） */
+body.bn-square-icons img[src*='nicoaccount/usericon/'],
+body.bn-square-icons img[src*='comch/channel-icon/'],
+body.bn-square-icons img[data-src*='nicoaccount/usericon/'],
+body.bn-square-icons img[data-src*='comch/channel-icon/'] {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニコ静画 - コミュニティページ */
+body.bn-square-icons .p-works .subInfoArea .userName .userIcon,
+body.bn-square-icons
+  .p-works
+  .materialComment
+  .commentList
+  .commentContents
+  .surfaceArea
+  .commentInfo
+  .useIcon,
+body.bn-square-icons .p-worksAgreement__contents .targetMaterial__card .summary .userInfo .userIcon,
+body.bn-square-icons .c-childrenContents .childrenContentsUserArea .childrenContentsUserIcon > img,
+body.bn-square-icons
+  .p-treeWorksFull
+  .worksFullCard
+  .contentArea
+  .contentFootArea
+  .ownerInfoArea
+  .ownerIcon {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* クリエイターサポートツールページ */
+body.bn-square-icons .iBh_p9H9ax6EN27LRmAh .IbW8hgfdJyp7BtUvaXR1,
+body.bn-square-icons .jmRJXyo6aHvDNU8YTorv .ryhI4d8zjxwCfEYYc4kM {
+  border-radius: 4px !important;
+}
+
+body.bn-square-icons .VNRymjatkl4mBDHcCRJx .y1jfAxBW7FlF0YBEQuPA,
+body.bn-square-icons .uSgAPfJATwkRjzH5HiP_ {
+  border-radius: 4px !important;
+}
+
+/* ニコニコガレージ共通 */
+body.bn-square-icons .css-1in7va2 {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニコガレージページ */
+body.bn-square-icons .inner .item-icon img {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニコチャンネル共通 */
+body.bn-square-icons .css-1m7sdmd {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニコ検索 */
+body.bn-square-icons .AuroraVisionCard-uploaderIcon.Thumbnail,
+body.bn-square-icons .ContentsPickupCard-footerUploaderIcon.Thumbnail {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニコ静画 - マイページ・タイムライン・ユーザーページ */
+body.bn-square-icons .UserIcon,
+body.bn-square-icons .UserIcon-image,
+body.bn-square-icons .BxJ3LC2iPe01cd9SOKog .hkl5B_XjfV3XpGBkwFt6,
+body.bn-square-icons .NC-OwnerIcon {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+body.bn-square-icons .TimelineActorFilterButton-actorIcon.Thumbnail,
+body.bn-square-icons .TimelineItem-senderIcon.Thumbnail,
+body.bn-square-icons .TimelineMaskedItem-senderIcon {
+  border-radius: 8px !important;
+}
+
+/* ニコニコ静画ページ（イラスト個研） */
+body.bn-square-icons .wrapper[data-v-57557a72],
+body.bn-square-icons .thumbnail-image[data-v-4cdbfc28],
+body.bn-square-icons .thumbnail[data-v-540b8940],
+body.bn-square-icons .user-thumbnail[data-v-c827515c],
+body.bn-square-icons .thumbnail[data-v-9a44e044],
+body.bn-square-icons .user-thumbnail[data-v-9a44e044],
+body.bn-square-icons .thumbnail[data-v-9a44e044]:before {
+  border-radius: 0;
+}
+
+/* ニコニコ生放送 - 各種ページ共通 */
+body.bn-square-icons .___program-provider-icon___bSlNt,
+body.bn-square-icons .___program-provider-icon___JSClH,
+body.bn-square-icons .___program-card-provider-icon___BPWuu,
+body.bn-square-icons .___program-provider-icon____8OxE {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニコ生放送 - プログラムカード */
+body.bn-square-icons
+  .___program-card___JAMyQ
+  > .content-area
+  > .program-provider-card
+  > .information
+  > .thumbnail-image,
+body.bn-square-icons
+  .___program-card___nN5tk
+  > .content-area
+  > .program-provider-card
+  > .information
+  > .thumbnail-image {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニコ生放送 - ユーザーカード */
+body.bn-square-icons
+  .___user-card-list___zXzii
+  > li
+  > .user-card
+  > .user-summary
+  > .thumbnail-area
+  > .user-thumbnail {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニコ生放送 - マイページ関連 */
+body.bn-square-icons
+  .item
+  > .program-card
+  > .content-area
+  > .program-provider-card
+  > .information
+  > .thumbnail-image,
+body.bn-square-icons
+  .content-area
+  > .program-provider-card
+  > .information
+  > .thumbnail-image
+  > .resource,
+body.bn-square-icons
+  .nicoad-frame
+  > .content-area
+  > .content-area
+  > .program-information-area
+  > .program-provider-card
+  > .information
+  > .thumbnail-image
+  > .resource,
+body.bn-square-icons
+  .nicoad-frame
+  > .content-area
+  > .content-area
+  > .nicoad-statistics-section
+  > header
+  > .heading
+  > .nicoad-provider-summary
+  > .thumbnail-area
+  > .user-thumbnail,
+body.bn-square-icons .___user-konomi-tag-list-section___QALx0 > header > .user-thumbnail-image {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニコ生放送 - メッセージ・プロバイダー */
+body.bn-square-icons .___message___CTaZB .provider-thumbnail,
+body.bn-square-icons .___resource___F3vAm,
+body.bn-square-icons .___user-summary___uHCMo > .thumbnail-area > .user-thumbnail,
+body.bn-square-icons .___channel-summary___eR6ri > .channel-thumbnail {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニコ生放送 - ヘッダーエリア */
+body.bn-square-icons .header-area .user-icon,
+body.bn-square-icons .header-area .user-icon img {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* ニコニ立体 */
+body.bn-square-icons .work-author .work-author-thumbnail {
+  border-radius: 0 !important;
+}
+
+body.bn-square-icons .css-192so1e {
+  border-radius: 0 !important;
+}
+
+/* ニコニ立体（Vue data属性付き） */
+body.bn-square-icons .owner-icon[data-v-9d53e955],
+body.bn-square-icons .related-anchor-owner-icon[data-v-9d53e955],
+body.bn-square-icons .thumbnail[data-v-540b8940] {
+  border-radius: 0;
+}
+
+/* チャンネル動画ページ */
+body.bn-square-icons .ChannelIcon {
+  border-radius: var(--bn-icon-border-radius) !important;
+}
+
+/* サポーターボタンを非表示 */
+body.bn-hide-supporter {
+  /* 現在のニコニコ動画: creator-support.nicovideo.jpへのリンク */
+  a[href*='creator-support.nicovideo.jp'] {
+    display: none !important;
+  }
+
+  /* 旧バージョン: NC-CreatorSupportAccepting クラス（後方互換性） */
+  .NC-CreatorSupportAccepting {
+    display: none !important;
+  }
+
+  /* サポーター勧誘コンテナ */
+  .CreatorSupportAppealContainer {
+    display: none !important;
+  }
+}
+
+/* 通報フォーム定型文入力補助 */
+.bn-allegation-assist-container {
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: #f0f8ff;
+  border: 1px solid #b0d4ff;
+  border-radius: 4px;
+}
+
+.bn-allegation-assist-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+}
+
+.bn-allegation-assist-select {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.bn-allegation-assist-note {
+  margin-top: 8px;
+  margin-bottom: 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* シネマティックライティング（アンビエントモード） - 改善版 */
+
+/* 外側グロー用コンテナ（メイングリッドに配置、広範囲の光） */
+.bn-ambient-outer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+  /* GPUアクセラレーション */
+  will-change: box-shadow, background;
+  transform: translateZ(0);
+  /* スムーズなトランジション */
+  transition:
+    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ダークモードとの調和 */
+  mix-blend-mode: screen;
+  /* 外側に広がるように */
+  margin: -100px;
+  padding: 100px;
+}
+
+/* 内側グロー用コンテナ（プレイヤーエリアに配置） */
+.bn-ambient-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: visible;
+}
+
+/* 内側グロー要素（プレイヤー周囲の近いグロー） */
+.bn-ambient-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  /* GPUアクセラレーション */
+  will-change: box-shadow, background;
+  transform: translateZ(0);
+  /* スムーズなトランジション */
+  transition:
+    box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ダークモードとの調和 */
+  mix-blend-mode: screen;
+}
+
+/* コーナーグロー用コンテナ */
+.bn-ambient-corners {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* コーナーグロー要素（四隅の光） */
+.bn-ambient-corner {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  /* GPUアクセラレーション */
+  will-change: background;
+  transform: translateZ(0);
+  /* スムーズなトランジション */
+  transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ダークモードとの調和 */
+  mix-blend-mode: screen;
+  border-radius: 50%;
+  filter: blur(30px);
+}
+
+/* コーナーの位置 */
+.bn-ambient-corner-top-left {
+  top: -60px;
+  left: -60px;
+}
+
+.bn-ambient-corner-top-right {
+  top: -60px;
+  right: -60px;
+}
+
+.bn-ambient-corner-bottom-left {
+  bottom: -60px;
+  left: -60px;
+}
+
+.bn-ambient-corner-bottom-right {
+  bottom: -60px;
+  right: -60px;
+}
+
+/* 旧バージョンとの互換性（廃止予定） */
+.bn-ambient-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  transition:
+    box-shadow 0.3s ease-out,
+    background 0.3s ease-out;
+  mix-blend-mode: screen;
+}
+
+/* 追加のカスタムスタイルをここに記述 */
+
+/*
+ * 大百科リンク復元
+ * 2023年以前のニコニコ動画で使用されていたスタイルを再現
+ * 元のクラス: .NicoDicIcon.is-available
+ * タグの内部（タグ名の後ろ）に配置
+ */
+.bn-nicopedia-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.bn-nicopedia-link:hover {
+  text-decoration: none;
+}
+
+/* アイコン部分（元の .NicoDicIcon を再現） */
+.bn-nicopedia-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #8c0000; /* 元のニコニコ大百科アイコンの色 */
+  color: #fff;
+  transition: background-color 0.15s ease;
+}
+
+.bn-nicopedia-icon svg {
+  width: 10px;
+  height: 10px;
+}
+
+.bn-nicopedia-link:hover .bn-nicopedia-icon {
+  background-color: #a00; /* ホバー時は少し明るく */
+}

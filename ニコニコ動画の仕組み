@@ -1,0 +1,175 @@
+ニコニコ動画 技術的詳細分析
+アーキテクチャ概要
+
+ニコニコ動画はモダンなマイクロサービスアーキテクチャを採用しており、以下のような技術スタックで構成されています：
+
+    フロントエンド: React/Remix ベースの SPA (Single Page Application)
+    動画配信: HLS (HTTP Live Streaming) + CloudFront (CDN)
+    API: JSON ベースの RESTful API
+    コメント: 専用のコメントサーバー (public.nvcomment.nicovideo.jp)
+    認証: セッションベースの認証 + JWT トークン
+
+フロントエンド技術スタック
+JavaScriptバンドル構造
+
+ニコニコ動画はコード分割されたバンドル構造を採用しています：
+
+https://resource.video.nimg.jp/web/scripts/ ├── nvpc_next/assets/ # 新プレイヤーシステム (NicoNico Video Player Client Next) │ ├── manifest-*.js # マニフェスト │ ├── entry.client-*.js # クライアントエントリーポイント │ ├── root-*.js # ルートコンポーネント │ ├── index-*.js # 共通コンポーネント │ ├── api-client-*.js # API クライアント │ ├── use-media-query-*.js # メディアクエリフック │ └── _web.watch._id._-*.js # 動画視聴ページ固有コード └── bundle/ ├── pages_index_VideoTop.js # トップページ └── vendor.js # サードパーティライブラリ
+主要なフロントエンド機能
+コンポーネント 	説明
+PlayerVolumeBar 	プレイヤーボリュームコントロール
+PlayerSeekBar 	プレイヤーシークバー
+VideoCard 	動画カード表示
+FollowButton 	ユーザーフォローボタン
+Toast 	通知表示
+nicoad 	ニコニ広告機能
+WakutkoolNotice 	わくくおる通知
+メタデータ・OGP
+
+```html
+
+```
+主要APIエンドポイント
+1. 動画アクセス権限 API (HLS)
+
+エンドポイント: POST https://nvapi.nicovideo.jp/v1/watch/{videoId}/access-rights/hls
+
+動画のストリーミング URL を取得するためのアクセス権限を要求します。
+リクエストヘッダー
+
+http x-access-right-key: {JWTトークン} x-frontend-id: 6 x-frontend-version: 0 x-request-with: nicovideo x-niconico-language: ja-jp Content-Type: application/json
+リクエストボディ
+
+json { "outputs": [ ["video-h264-360p", "audio-aac-128kbps"], ["video-h264-360p", "audio-aac-64kbps"], ["video-h264-360p-lowest", "audio-aac-128kbps"], ["video-h264-360p-lowest", "audio-aac-64kbps"] ] }
+レスポンス
+
+json { "meta": { "status": 201 }, "data": { "contentUrl": "https://delivery.domand.nicovideo.jp/hlsbid/.../variants/....m3u8?...", "createTime": "2026-01-15T20:10:50+09:00", "expireTime": "2026-01-16T20:10:50+09:00" } }
+2. コメントサーバー API
+
+エンドポイント: POST https://public.nvcomment.nicovideo.jp/v1/threads
+
+動画に紐づくコメントスレッドを取得します。
+リクエストボディ
+
+json { "params": { "targets": [ { "id": "1173108780", "fork": "owner" }, { "id": "1173108780", "fork": "main" }, { "id": "1173108780", "fork": "easy" } ], "language": "ja-jp" }, "threadKey": "{JWTトークン}", "additionals": {} }
+レスポンス構造
+
+json { "meta": { "status": 200 }, "data": { "globalComments": [{ "id": "1173108780", "count": 5629287 }], "threads": [ { "id": "1173108780", "fork": "main", "commentCount": 5550747, "comments": [ { "id": "882123066398695732", "no": 4118020, "vposMs": 361140, "body": "コメント本文", "commands": ["184"], "userId": "Yg_6QWiiS_T2mq3WJuzUcp41MvQ", "isPremium": true, "score": -2200, "postedAt": "2013-02-17T21:16:30+09:00", "nicoruCount": 115, "source": "leaf" } ] } ] } }
+3. レコメンデーション API
+
+エンドポイント: GET https://nvapi.nicovideo.jp/v1/recommend
+
+?recipeId=video_watch_recommendation &recipeVersion=2 &videoId=sm9 &site=nicovideo &limit=25 &sensitiveContents=mask
+4. ニコニ広告 API
+
+エンドポイント: GET https://api.nicoad.nicovideo.jp/v1/contents/video/decoration
+
+動画のニコニ広告情報を取得します。
+
+?ids=sm9,sm45833561,sm45836746,...
+5. その他のAPI
+API 	エンドポイント 	用途
+広場ウィジェット 	eapi.beta.hiroba.nicovideo.jp/v1/square-widget 	関連コミュニティ情報
+ユーザーフォロー 	user-follow-api.nicovideo.jp/v1/user/followees/ 	フォロー情報
+マイキー実績 	mjk.nicovideo.jp/api/v1/ 	マイキー情報
+ストーリーボード 	nvapi.nicovideo.jp/v1/watch/{id}/access-rights/storyboard 	サムネイルシート
+動画配信システム
+Domand (動画配信プラットフォーム)
+
+ニコニコ動画は Domand と呼ばれる社内動画配信プラットフォームを使用しています：
+
+    配信ドメイン: delivery.domand.nicovideo.jp
+    アセットドメイン: asset.domand.nicovideo.jp
+    CDN: AWS CloudFront
+
+配信品質
+品質 	ビデオ 	オーディオ
+360p 	video-h264-360p 	-
+360p (低) 	video-h264-360p-lowest 	-
+オーディオ 	- 	audio-aac-128kbps
+オーディオ 	- 	audio-aac-64kbps
+HLS プレイリスト構造
+
+https://delivery.domand.nicovideo.jp/hlsbid/{bid}/playlists/ ├── variants/ │ └── {variant_id}.m3u8 # マスターplaylist └── media/ ├── video-h264-360p-lowest.m3u8 # 動画セグメントplaylist └── audio-aac-128kbps.m3u8 # 音声セグメントplaylist
+HLS配信の詳細
+セグメント構造
+
+動画は以下のように分割されています：
+
+https://asset.domand.nicovideo.jp/{bid}/ ├── video/{segment_number}/ │ └── video-h264-360p-lowest/ │ ├── init01.cmfv # 初化セグメント │ ├── 01.cmfv # セグメント1 │ ├── 02.cmfv # セグメント2 │ └── ... └── audio/{track_number}/ └── audio-aac-128kbps/ ├── init01.cmfa # 初期化セグメント ├── 01.cmfa # セグメント1 ├── 02.cmfa # セグメント2 └── ...
+暗号化
+
+HLS セグメントは AES-128 で暗号化されています：
+
+https://delivery.domand.nicovideo.jp/hlsbid/{bid}/keys/ ├── video-h264-360p-lowest.key └── audio-aac-128kbps.key
+URL署名 (CloudFront)
+
+すべての URL には AWS CloudFront の署名が含まれています：
+
+?session={session_id} &Policy={base64_policy} &Signature={signature} &Key-Pair-Id={key_pair_id}
+コメントシステム
+スレッド構造
+
+ニコニコのコメントは「スレッド」と「フォーク」で構成されています：
+フォーク 	説明
+owner 	投稿者コメント
+main 	メインコメント
+easy 	簡易コメント（HTML5プレイヤー用）
+コメントコマンド
+
+コメントには「コマンド」を適用できます：
+
+    184 - 匿名希望（NGID表示）
+    ue - 上寄せ
+    big - 大きく
+    ender - IEアンチエイリアス
+    gothic - ゴシック体
+    full - 画面いっぱい
+    #RRGGBB - 色指定
+
+threadKey JWT
+
+threadKey は JWT トークンで構成されています：
+
+json { "jti": "{unique_id}", "exp": {expiration_timestamp}, "type": "Thread-Key", "d": {video_duration}, "tids": ["{thread_ids}"], "f184s": [], "uid": "{user_id}" }
+認証・セッション管理
+セッションクッキー
+
+主な認証クッキー：
+クッキー名 	ドメイン 	説明
+nicosid 	.nicovideo.jp 	セッションID
+user_session 	.nicovideo.jp 	ユーザーセッション
+domand_bid 	.nicovideo.jp 	DomandブラウザID
+LocalStorage
+
+javascript localStorage['@nvweb-packages/comments:userng:v2'] // コメント設定
+x-access-right-key JWT
+
+動画配信APIで使用される JWT ペイロード：
+
+json { "jti": "{unique_id}", "exp": {expiration}, "type": "Access-Right-Key", "vid": "{video_id}", "rid": "{resource_id}", "fid": {frontend_id}, "uid": "{user_id}", "d": {duration}, "v": ["video-quality-1", "video-quality-2"], "a": ["audio-quality-1", "audio-quality-2"], "s": true, "sh": false }
+開発に役立つ情報
+フロントエンド識別子
+ヘッダー 	値 	説明
+x-frontend-id 	6 	フロントエンドID
+x-frontend-version 	0 	フロントエンドバージョン
+x-request-with 	nicovideo 	リクエスト元識別
+アクセス権限取得フロー
+
+    ページロード時に埋め込みデータから初期情報を取得
+    x-access-right-key ヘッダー付きでアクセス権限 API を呼ぶ
+    レスポンスの contentUrl から HLS プレイリストを取得
+    プレイヤーが HLS セグメントを順次ダウンロード
+
+ストーリーボード (サムネイルシート)
+
+https://asset.domand.nicovideo.jp/{storyboard_bid}/storyboard/{track}/storyboard/ ├── storyboard.json # メタデータ ├── 0001.jpg # サムネイル画像 ├── 0002.jpg └── ...
+広告配信
+
+ニコニコ動画は複数の広告ネットワークを使用しています：
+
+    ads.nicovideo.jp - 自社広告
+    Google AdSense / Ad Manager
+    Yahoo! YDN
+    Criteo
+    Rubicon Project
