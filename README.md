@@ -12,7 +12,7 @@
 
 ## インストール方法
 
-[Release](https://github.com/abeshinzo78/better-niconico-firefox/releases/tag/v1.0.13)より最新版のxpiをダウンロードするだけです。
+[Releases](https://github.com/abeshinzo78/better-niconico-firefox/releases/tag/v1.0.13)より最新版のxpiをダウンロードするだけです。
 
 ### 開発版のインストール
 ### 開発版のインストール
