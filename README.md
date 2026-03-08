@@ -17,7 +17,7 @@
 [Releases](https://github.com/abeshinzo78/better-niconico-firefox/releases/tag/v1.0.13)より最新版のxpiをダウンロードするだけです。
 
 ### 開発版のインストール
-### 開発版のインストール
+
 1. このリポジトリをクローン
    ``` bash
    git clone https://github.com/abeshinzo78/better-niconico-firefox.git
