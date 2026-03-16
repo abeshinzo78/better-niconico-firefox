@@ -59,6 +59,10 @@ let videoObserver: MutationObserver | null = null;
 // 全画面モードイベントリスナーのセットアップ済みフラグ
 let fullscreenListenerSetup: boolean = false;
 
+// render失敗の連続回数（無限ループ防止）
+let consecutiveRenderFailures: number = 0;
+const MAX_RENDER_FAILURES = 3;
+
 /**
  * 動画視聴ページかどうかを判定
  */
@@ -113,6 +117,11 @@ async function isWebGPUSupported(): Promise<Result<boolean, WebGPUError>> {
       webGPUSupportCache = false;
       return err(error);
     }
+
+    // adapterだけでなく実際にdeviceを取得できるかまで確認
+    // GPU非搭載PCではrequestDevice()が失敗する
+    const device = await adapter.requestDevice();
+    device.destroy(); // テスト用に取得したdeviceは即解放
     webGPUSupportCache = true;
     return ok(true);
   } catch (error) {
@@ -345,6 +354,11 @@ async function enableUpscaling(): Promise<void> {
     return;
   }
 
+  // render失敗が連続した場合はリトライを停止（無限ループ防止）
+  if (consecutiveRenderFailures >= MAX_RENDER_FAILURES) {
+    return;
+  }
+
   // 全画面モードの場合はアップスケーリングを無効化
   if (isFullscreenMode()) {
     console.log('[Better Niconico] 全画面表示中のため、動画アップスケーリングを無効化します');
@@ -416,8 +430,13 @@ async function enableUpscaling(): Promise<void> {
     // ModeAプリセット: Clamp Highlights → Restore (CNNVL) → Upscale (CNNx2VL/CNNx2M)
     // render()関数は自動的にrequestVideoFrameCallbackを使ってレンダリングループを開始する
     // render loopはcanvas.remove()で自動的に停止される
+    //
+    // Firefox: HTMLVideoElement は copyExternalImageToTexture のソースとして非対応。
+    // XrayVisionにより GPUQueue.prototype パッチも無効なため、
+    // 各フレームを OffscreenCanvas に描画するプロキシを渡す。
+    const videoSource = createFirefoxVideoProxy(video);
     await render({
-      video,
+      video: videoSource,
       canvas,
       pipelineBuilder: (device, inputTexture) => {
         return [
@@ -449,6 +468,7 @@ async function enableUpscaling(): Promise<void> {
     currentVideoElement = video;
     currentVideoSrc = video.src;
 
+    consecutiveRenderFailures = 0; // 成功時はリセット
     console.log('[Better Niconico] Video upscaling enabled successfully');
   } catch (error) {
     // AbortErrorは正常なクリーンアップなのでログに出さない
@@ -457,8 +477,15 @@ async function enableUpscaling(): Promise<void> {
       return;
     }
 
+    consecutiveRenderFailures++;
     const renderError = webgpuRenderFailedError('Failed to render video upscaling', error);
     console.error('[Better Niconico]', renderError.message, error);
+
+    if (consecutiveRenderFailures >= MAX_RENDER_FAILURES) {
+      console.warn(
+        `[Better Niconico] アップスケーリングが${MAX_RENDER_FAILURES}回連続で失敗しました。この環境ではWebGPUアップスケーリングがサポートされていない可能性があります。`,
+      );
+    }
 
     // エラー時のクリーンアップ
     cleanupUpscaling(video);
@@ -502,11 +529,14 @@ function cleanupUpscaling(video: HTMLVideoElement | null): void {
 
 /**
  * アップスケーリングを無効化
+ * @param silent ログ出力を抑制するかどうか
  */
-function disableUpscaling(): void {
+function disableUpscaling(silent: boolean = false): void {
   const video = getVideoElement();
   cleanupUpscaling(video);
-  console.log('[Better Niconico] Video upscaling disabled');
+  if (!silent) {
+    console.log('[Better Niconico] Video upscaling disabled');
+  }
 }
 
 /**
@@ -623,10 +653,88 @@ function stopVideoObserver(): void {
 }
 
 /**
+ * Firefox用 videoプロキシ:
+ * FirefoxはGPUQueue.copyExternalImageToTextureでHTMLVideoElementをソースとして
+ * サポートしていない。また、XrayVisionによりGPUQueue.prototypeのパッチも無効。
+ * そのため、requestVideoFrameCallbackで各フレームをOffscreenCanvasに描画し、
+ * anime4k-webgpuには HTMLVideoElement の代わりに OffscreenCanvas を渡す。
+ * (OffscreenCanvas は Firefox WebGPU でサポート済み)
+ */
+export function createFirefoxVideoProxy(video: HTMLVideoElement): HTMLVideoElement {
+  if (!navigator.userAgent.includes('Firefox')) return video;
+
+  let proxy: OffscreenCanvas;
+  try {
+    proxy = new OffscreenCanvas(video.videoWidth, video.videoHeight);
+  } catch (e) {
+    console.warn('[Better Niconico] OffscreenCanvas作成失敗、フォールバック:', e);
+    return video; // OffscreenCanvas非対応環境はフォールバック
+  }
+  const ctx = proxy.getContext('2d');
+  if (!ctx) {
+    console.warn('[Better Niconico] OffscreenCanvas 2Dコンテキスト取得失敗、フォールバック');
+    return video;
+  }
+
+  console.log('[Better Niconico] Firefox: OffscreenCanvasプロキシを作成しました');
+
+  // anime4k-webgpuはrequestVideoFrameCallbackでフレームを取得する
+  // プロキシのrequestVideoFrameCallbackは: 動画フレームをcanvasに描画 → コールバック呼び出し
+  (proxy as unknown as Record<string, unknown>).requestVideoFrameCallback = (
+    callback: VideoFrameRequestCallback,
+  ): number => {
+    return video.requestVideoFrameCallback((now, metadata) => {
+      ctx.drawImage(video, 0, 0);
+      callback(now, metadata);
+    });
+  };
+
+  (proxy as unknown as Record<string, unknown>).cancelVideoFrameCallback = (id: number): void => {
+    video.cancelVideoFrameCallback(id);
+  };
+
+  // anime4k-webgpuが参照する HTMLVideoElement プロパティをプロキシ
+  // e.videoWidth, e.videoHeight (テクスチャ作成に使用)
+  // e.readyState, e.HAVE_FUTURE_DATA (ロード待機チェック)
+  // e.paused (フレームループ制御)
+  // e.onloadeddata (ロード待機コールバック)
+  Object.defineProperty(proxy, 'videoWidth', {
+    get: () => video.videoWidth,
+    configurable: true,
+  });
+  Object.defineProperty(proxy, 'videoHeight', {
+    get: () => video.videoHeight,
+    configurable: true,
+  });
+  Object.defineProperty(proxy, 'readyState', {
+    get: () => video.readyState,
+    configurable: true,
+  });
+  Object.defineProperty(proxy, 'HAVE_FUTURE_DATA', {
+    get: () => video.HAVE_FUTURE_DATA,
+    configurable: true,
+  });
+  Object.defineProperty(proxy, 'paused', {
+    get: () => video.paused,
+    configurable: true,
+  });
+  Object.defineProperty(proxy, 'onloadeddata', {
+    get: () => (video as HTMLVideoElement).onloadeddata,
+    set: (v) => {
+      (video as HTMLVideoElement).onloadeddata = v;
+    },
+    configurable: true,
+  });
+
+  return proxy as unknown as HTMLVideoElement;
+}
+
+/**
  * 設定を適用する（冪等性を保証）
  * @param enabled - true: アップスケーリング有効, false: アップスケーリング無効
  */
 export async function apply(enabled: boolean): Promise<void> {
+  const wasEnabled = currentEnabled;
   currentEnabled = enabled;
 
   if (enabled) {
@@ -636,7 +744,9 @@ export async function apply(enabled: boolean): Promise<void> {
     setupVideoObserver();
     await enableUpscaling();
   } else {
-    disableUpscaling();
+    // 状態が有効から無効に変わった時のみログを出力
+    const isStateChange = wasEnabled !== enabled;
+    disableUpscaling(!isStateChange);
     // 動画監視を停止
     stopVideoObserver();
   }

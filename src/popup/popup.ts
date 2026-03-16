@@ -51,6 +51,13 @@ const templateTypeRadios = document.querySelectorAll('input[name="templateType"]
 const SETTINGS_CONFIG: SettingConfig[] = [
   // Video Category
   {
+    id: 'enableVideoUpscaling',
+    label: '動画アップスケーリング (Anime4K)',
+    description: 'WebGPUを使用してAnime4Kで動画を高画質化します',
+    category: 'video',
+    icon: 'M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4',
+  },
+  {
     id: 'enableVideoDownload',
     label: '動画ダウンロード機能',
     description: 'プレイヤーに動画ダウンロードボタンを追加します',

@@ -53,6 +53,7 @@ function setupWebGPUMock(supported: boolean = true) {
         requestDevice: vi.fn().mockResolvedValue({
           createTexture: vi.fn().mockReturnValue({}),
           queue: { submit: vi.fn() },
+          destroy: vi.fn(),
         }),
       }
     : null;
@@ -389,6 +390,125 @@ describe('videoUpscaling', () => {
       const secondCallCount = (render as Mock).mock.calls.length;
 
       expect(secondCallCount).toBe(firstCallCount);
+    });
+  });
+
+  describe('Firefox video proxy (createFirefoxVideoProxy)', () => {
+    let originalOffscreenCanvas: unknown;
+    let originalUserAgent: string;
+
+    beforeEach(() => {
+      originalOffscreenCanvas = (global as any).OffscreenCanvas;
+      originalUserAgent = navigator.userAgent;
+    });
+
+    afterEach(() => {
+      (global as any).OffscreenCanvas = originalOffscreenCanvas;
+      Object.defineProperty(navigator, 'userAgent', {
+        value: originalUserAgent,
+        configurable: true,
+      });
+    });
+
+    it('Firefoxでは元の video とは別のオブジェクトを返す', async () => {
+      Object.defineProperty(navigator, 'userAgent', {
+        value: 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/120.0',
+        configurable: true,
+      });
+
+      const MockOffscreenCanvas = vi.fn(function (this: any, w: number, h: number) {
+        this.width = w;
+        this.height = h;
+        this.getContext = vi.fn().mockReturnValue({ drawImage: vi.fn() });
+      });
+      (global as any).OffscreenCanvas = MockOffscreenCanvas;
+
+      vi.resetModules();
+      const { createFirefoxVideoProxy } = await import('./videoUpscaling');
+
+      const video = document.createElement('video');
+      Object.defineProperty(video, 'videoWidth', { value: 640, configurable: true });
+      Object.defineProperty(video, 'videoHeight', { value: 360, configurable: true });
+
+      const result = createFirefoxVideoProxy(video);
+
+      expect(result).not.toBe(video);
+    });
+
+    it('Chrome（非Firefox）では元の video をそのまま返す', async () => {
+      Object.defineProperty(navigator, 'userAgent', {
+        value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit Chrome/120.0',
+        configurable: true,
+      });
+
+      vi.resetModules();
+      const { createFirefoxVideoProxy } = await import('./videoUpscaling');
+
+      const video = document.createElement('video');
+      const result = createFirefoxVideoProxy(video);
+
+      expect(result).toBe(video);
+    });
+
+    it('プロキシの requestVideoFrameCallback が動画フレームを canvas に描画してからコールバックを呼ぶ', async () => {
+      Object.defineProperty(navigator, 'userAgent', {
+        value: 'Mozilla/5.0 Firefox/120.0',
+        configurable: true,
+      });
+
+      const mockDrawImage = vi.fn();
+      const MockOffscreenCanvas = vi.fn(function (this: any, w: number, h: number) {
+        this.width = w;
+        this.height = h;
+        this.getContext = vi.fn().mockReturnValue({ drawImage: mockDrawImage });
+      });
+      (global as any).OffscreenCanvas = MockOffscreenCanvas;
+
+      vi.resetModules();
+      const { createFirefoxVideoProxy } = await import('./videoUpscaling');
+
+      const mockRVFC = vi.fn((callback: VideoFrameRequestCallback) => {
+        callback(performance.now(), {} as VideoFrameMetadata);
+        return 1;
+      });
+      const video = document.createElement('video');
+      Object.defineProperty(video, 'videoWidth', { value: 640, configurable: true });
+      Object.defineProperty(video, 'videoHeight', { value: 360, configurable: true });
+      video.requestVideoFrameCallback = mockRVFC;
+
+      const proxy = createFirefoxVideoProxy(video);
+      const mockUserCallback = vi.fn();
+      (proxy as any).requestVideoFrameCallback(mockUserCallback);
+
+      // フレームが canvas に描画されてから callback が呼ばれる
+      expect(mockDrawImage).toHaveBeenCalledWith(video, 0, 0);
+      expect(mockUserCallback).toHaveBeenCalled();
+    });
+
+    it('プロキシの paused が元動画の paused を反映する', async () => {
+      Object.defineProperty(navigator, 'userAgent', {
+        value: 'Firefox/120.0',
+        configurable: true,
+      });
+
+      const MockOffscreenCanvas = vi.fn(function (this: any, w: number, h: number) {
+        this.width = w;
+        this.height = h;
+        this.getContext = vi.fn().mockReturnValue({ drawImage: vi.fn() });
+      });
+      (global as any).OffscreenCanvas = MockOffscreenCanvas;
+
+      vi.resetModules();
+      const { createFirefoxVideoProxy } = await import('./videoUpscaling');
+
+      const video = document.createElement('video');
+      Object.defineProperty(video, 'videoWidth', { value: 640, configurable: true });
+      Object.defineProperty(video, 'videoHeight', { value: 360, configurable: true });
+      Object.defineProperty(video, 'paused', { value: true, configurable: true });
+
+      const proxy = createFirefoxVideoProxy(video);
+
+      expect((proxy as any).paused).toBe(true);
     });
   });
 
